@@ -257,6 +257,10 @@ class WorkoutsFrame(ttk.Frame):
             
             # Memorizza l'allenamento corrente
             self.current_workout = workout
+            
+            # Forza l'aggiornamento dei valori delle zone
+            if hasattr(self.controller, 'zones_frame'):
+                self.controller.zones_frame.refresh_data()
     
     def on_workout_double_click(self, event):
         """

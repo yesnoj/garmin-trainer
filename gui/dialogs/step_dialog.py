@@ -619,18 +619,23 @@ class StepDialog:
         """
         # Accedi alla configurazione attraverso la gerarchia parent
         try:
-            workout_config = self.parent.controller.workout_config
-            paces = workout_config.get('paces', {})
+            if hasattr(self.parent, 'controller') and hasattr(self.parent.controller, 'config'):
+                config = self.parent.controller.config
+                if 'workout_config' in config and 'paces' in config['workout_config']:
+                    paces = config['workout_config']['paces']
+                    
+                    # Crea una lista di opzioni nel formato "nome (valore)"
+                    options = []
+                    for name in paces.keys():
+                        options.append(name)
+                    
+                    if not options:
+                        options = ["Z1", "Z2", "Z3", "Z4", "Z5", "recovery", "threshold", "marathon"]
+                        
+                    return options
             
-            # Crea una lista di opzioni nel formato "nome (valore)"
-            options = []
-            for name, value in paces.items():
-                options.append(name)
-            
-            if not options:
-                options = ["Z1", "Z2", "Z3", "Z4", "Z5", "recovery", "threshold", "marathon"]
-                
-            return options
+            # Se non riesce ad accedere alla configurazione, usa valori di default
+            return ["Z1", "Z2", "Z3", "Z4", "Z5", "recovery", "threshold", "marathon"]
         except:
             return ["Z1", "Z2", "Z3", "Z4", "Z5", "recovery", "threshold", "marathon"]
     
@@ -643,21 +648,34 @@ class StepDialog:
         """
         # Accedi alla configurazione attraverso la gerarchia parent
         try:
-            workout_config = self.parent.controller.workout_config
-            heart_rates = workout_config.get('heart_rates', {})
+            if hasattr(self.parent, 'controller') and hasattr(self.parent.controller, 'config'):
+                config = self.parent.controller.config
+                if 'workout_config' in config and 'heart_rates' in config['workout_config']:
+                    heart_rates = config['workout_config']['heart_rates']
+                    
+                    # Filtra per escludere max_hr
+                    options = []
+                    for name in heart_rates.keys():
+                        if name != 'max_hr':
+                            options.append(name)
+                    
+                    if not options:
+                        options = ["Z1_HR", "Z2_HR", "Z3_HR", "Z4_HR", "Z5_HR"]
+                        
+                    return options
             
-            # Filtra per escludere max_hr
-            options = []
-            for name in heart_rates.keys():
-                if name != 'max_hr':
-                    options.append(name)
-            
-            if not options:
-                options = ["Z1_HR", "Z2_HR", "Z3_HR", "Z4_HR", "Z5_HR"]
-                
-            return options
+            # Se non riesce ad accedere alla configurazione, usa valori di default
+            return ["Z1_HR", "Z2_HR", "Z3_HR", "Z4_HR", "Z5_HR"]
         except:
             return ["Z1_HR", "Z2_HR", "Z3_HR", "Z4_HR", "Z5_HR"]
+    
+    def _load_latest_zone_values(self):
+        """Carica i valori più recenti delle zone dalla configurazione."""
+        if hasattr(self.parent, 'controller') and hasattr(self.parent.controller, 'config'):
+            config = self.parent.controller.config
+            if 'workout_config' in config:
+                # Aggiorna i target dalle zone disponibili
+                self.on_target_change()
     
     def _get_config_power_zones(self):
         """
@@ -668,19 +686,24 @@ class StepDialog:
         """
         # Accedi alla configurazione attraverso la gerarchia parent
         try:
-            workout_config = self.parent.controller.workout_config
-            power_values = workout_config.get('power_values', {})
+            if hasattr(self.parent, 'controller') and hasattr(self.parent.controller, 'config'):
+                config = self.parent.controller.config
+                if 'workout_config' in config and 'power_values' in config['workout_config']:
+                    power_values = config['workout_config']['power_values']
+                    
+                    # Filtra per escludere ftp
+                    options = []
+                    for name in power_values.keys():
+                        if name != 'ftp':
+                            options.append(name)
+                    
+                    if not options:
+                        options = ["Z1", "Z2", "Z3", "Z4", "Z5", "threshold", "sweet_spot"]
+                        
+                    return options
             
-            # Filtra per escludere ftp
-            options = []
-            for name in power_values.keys():
-                if name != 'ftp':
-                    options.append(name)
-            
-            if not options:
-                options = ["Z1", "Z2", "Z3", "Z4", "Z5", "threshold", "sweet_spot"]
-                
-            return options
+            # Se non riesce ad accedere alla configurazione, usa valori di default
+            return ["Z1", "Z2", "Z3", "Z4", "Z5", "threshold", "sweet_spot"]
         except:
             return ["Z1", "Z2", "Z3", "Z4", "Z5", "threshold", "sweet_spot"]
     

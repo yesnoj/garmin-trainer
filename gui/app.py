@@ -15,6 +15,7 @@ from gui.styles import setup_styles
 from gui.login_frame import LoginFrame
 from gui.workouts_frame import WorkoutsFrame
 from gui.import_export_frame import ImportExportFrame
+from gui.zones_frame import ZonesFrame  # Importa la nuova classe
 from core.utils import load_config, save_config
 
 class GarminTrainerApp:
@@ -71,6 +72,10 @@ class GarminTrainerApp:
         self.workouts_frame = WorkoutsFrame(self.notebook, self)
         self.notebook.add(self.workouts_frame, text="Allenamenti")
         
+        # Tab Zone - Aggiungi questa nuova tab
+        self.zones_frame = ZonesFrame(self.notebook, self)
+        self.notebook.add(self.zones_frame, text="Zone")
+        
         # Tab Import/Export
         self.import_export_frame = ImportExportFrame(self.notebook, self)
         self.notebook.add(self.import_export_frame, text="Import/Export")
@@ -108,7 +113,9 @@ class GarminTrainerApp:
         if tab_index == 1:  # Tab Allenamenti
             if self.garmin_client and self.garmin_client.is_logged_in():
                 self.workouts_frame.refresh_data()
-        elif tab_index == 2:  # Tab Import/Export
+        elif tab_index == 2:  # Tab Zone
+            self.zones_frame.refresh_data()
+        elif tab_index == 3:  # Tab Import/Export
             self.import_export_frame.refresh_data()
     
     def update_tab_state(self):
@@ -116,14 +123,17 @@ class GarminTrainerApp:
         if self.garmin_client and self.garmin_client.is_logged_in():
             # Abilita tutte le tab
             self.notebook.tab(1, state="normal")  # Allenamenti
-            self.notebook.tab(2, state="normal")  # Import/Export
+            self.notebook.tab(3, state="normal")  # Import/Export
         else:
             # Disabilita le tab che richiedono il login
             self.notebook.tab(1, state="disabled")  # Allenamenti
-            self.notebook.tab(2, state="disabled")  # Import/Export
+            self.notebook.tab(3, state="disabled")  # Import/Export
             
             # Assicurati che la tab di login sia selezionata
             self.notebook.select(0)
+        
+        # La tab Zone è sempre accessibile
+        self.notebook.tab(2, state="normal")  # Zone è sempre disponibile
     
     def set_garmin_client(self, client):
         """

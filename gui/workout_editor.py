@@ -423,50 +423,38 @@ class WorkoutEditor(ttk.Frame):
         if not self.current_workout:
             return
         
-        # Aggiungi gli step
-        for i, step in enumerate(self.current_workout.workout_steps):
-            # Prepara i valori per l'inserimento nella treeview
-            values = []
-            
-            # Indice
-            values.append(i + 1)
-            
-            # Tipo di passo
-            step_type = step.step_type
-            values.append(step_type)
-            
-            # Dettagli del passo
-            details = self.format_step_details(step)
-            values.append(details)
-            
-            # Inserisci nella treeview
-            item = self.steps_tree.insert("", "end", values=values)
-            
-            # Applica un tag per colorare la riga in base al tipo di passo
-            self.steps_tree.item(item, tags=(step_type,))
-            
-            # Se è un passo di tipo repeat, aggiungi i sottopassi indentati
-            if step_type == "repeat" and step.workout_steps:
-                for j, substep in enumerate(step.workout_steps):
-                    # Prepara i valori per il sottopasso
-                    subvalues = []
+        # Funzione ricorsiva per aggiungere step e substep
+        def add_steps_to_tree(steps, parent="", prefix=""):
+            for i, step in enumerate(steps):
+                # Prepara i valori per l'inserimento nella treeview
+                values = []
+                
+                # Indice
+                index_text = f"{prefix}{i + 1}" if prefix else str(i + 1)
+                values.append(index_text)
+                
+                # Tipo di passo
+                step_type = step.step_type
+                values.append(step_type)
+                
+                # Dettagli del passo
+                details = self.format_step_details(step)
+                values.append(details)
+                
+                # Inserisci nella treeview
+                item = self.steps_tree.insert(parent, "end", values=values, tags=(step_type,))
+                
+                # Se è un passo di tipo repeat, aggiungi i sottopassi
+                if step_type == "repeat" and step.workout_steps:
+                    # Espandi sempre l'elemento della ripetizione
+                    self.steps_tree.item(item, open=True)
                     
-                    # Indice
-                    subvalues.append(f"{i+1}.{j+1}")
-                    
-                    # Tipo di passo
-                    substep_type = substep.step_type
-                    subvalues.append(substep_type)
-                    
-                    # Dettagli del passo
-                    subdetails = self.format_step_details(substep)
-                    subvalues.append(subdetails)
-                    
-                    # Inserisci nella treeview come figlio dell'item repeat
-                    subitem = self.steps_tree.insert(item, "end", values=subvalues)
-                    
-                    # Applica un tag per colorare la riga in base al tipo di passo
-                    self.steps_tree.item(subitem, tags=(substep_type,))
+                    # Richiama ricorsivamente per aggiungere i sottopassi
+                    new_prefix = f"{index_text}." if prefix else f"{i + 1}."
+                    add_steps_to_tree(step.workout_steps, item, new_prefix)
+        
+        # Aggiungi gli step principali e ricorsivamente i sottopassi
+        add_steps_to_tree(self.current_workout.workout_steps)
         
         # Abilita/disabilita i pulsanti di modifica
         if self.current_workout and self.current_workout.workout_steps:
@@ -757,78 +745,89 @@ class WorkoutEditor(ttk.Frame):
         item_values = self.steps_tree.item(item_id, "values")
         index_str = item_values[0]
         
-        # Verifica se si tratta di un passo principale o di un sottopasso
-        if "." in index_str:
-            # Sottopasso di una ripetizione
-            main_index, sub_index = map(int, index_str.split("."))
-            main_index -= 1  # Converti in indice 0-based
-            sub_index -= 1   # Converti in indice 0-based
+        # Ottieni il percorso completo dell'indice
+        index_path = [int(x) for x in index_str.split(".")]
+        
+        # Funzione ricorsiva per trovare il passo corrispondente
+        def find_step(steps, path, current_depth=0):
+            if current_depth >= len(path):
+                return None
             
-            # Ottieni il passo principale
-            main_step = self.current_workout.workout_steps[main_index]
+            current_index = path[current_depth] - 1  # Converti in indice 0-based
             
-            # Verifica che sia un passo di tipo repeat
-            if main_step.step_type != "repeat":
-                return
+            if current_index < 0 or current_index >= len(steps):
+                return None
             
-            # Ottieni il sottopasso
-            substep = main_step.workout_steps[sub_index]
+            step = steps[current_index]
             
-            # Apri il dialog per modificare il sottopasso
-            dialog = StepDialog(
+            if current_depth == len(path) - 1:
+                # Abbiamo raggiunto la profondità desiderata, restituisci il passo
+                return step
+            elif step.step_type == "repeat" and current_depth < len(path) - 1:
+                # Continua la ricerca nei sottopassi
+                return find_step(step.workout_steps, path, current_depth + 1)
+            
+            return None
+        
+        # Funzione per trovare il passo genitore
+        def find_parent_step(steps, path, current_depth=0):
+            if current_depth >= len(path) - 1:
+                return steps, path[-1] - 1  # Restituisci la lista contenente il passo e l'indice 0-based
+            
+            current_index = path[current_depth] - 1  # Converti in indice 0-based
+            
+            if current_index < 0 or current_index >= len(steps):
+                return None, -1
+            
+            step = steps[current_index]
+            
+            if step.step_type == "repeat":
+                # Continua la ricerca nei sottopassi
+                return find_parent_step(step.workout_steps, path, current_depth + 1)
+            
+            return None, -1
+        
+        # Trova il passo da modificare
+        step = find_step(self.current_workout.workout_steps, index_path)
+        
+        if step is None:
+            messagebox.showerror(
+                "Errore", 
+                "Impossibile trovare il passo selezionato.",
+                parent=self
+            )
+            return
+        
+        # Gestisci il tipo di passo
+        if step.step_type == "repeat":
+            # Apri il dialog per le ripetizioni
+            dialog = RepeatDialog(
                 self, 
-                step_type=substep.step_type, 
-                step_detail=self.format_step_details(substep),
+                iterations=step.end_condition_value,
+                steps=[{s.step_type: self.format_step_details(s)} for s in step.workout_steps],
                 sport_type=self.current_workout.sport_type
             )
             
             if dialog.result:
-                step_type, step_detail = dialog.result
+                iterations, steps = dialog.result
                 
-                # Estrai condizione di fine e valore
-                end_condition = "lap.button"
-                end_value = None
-                description = ""
-                target = None
+                # Aggiorna il numero di ripetizioni
+                step.end_condition_value = iterations
                 
-                # Estrai la condizione di fine
-                if step_detail.startswith("lap-button"):
-                    end_condition = "lap.button"
-                    end_value = None
-                elif "min" in step_detail or ":" in step_detail and " @ " not in step_detail:
-                    end_condition = "time"
-                    end_value = step_detail.split(" ")[0]
-                elif "km" in step_detail or "m" in step_detail and "min" not in step_detail:
-                    end_condition = "distance"
-                    end_value = step_detail.split(" ")[0]
+                # Aggiorna i sottopassi
+                step.workout_steps = []
                 
-                # Estrai il target
-                if " @ " in step_detail:
-                    target_type = "pace.zone"
-                    target_value = step_detail.split(" @ ")[1].split(" -- ")[0] if " -- " in step_detail else step_detail.split(" @ ")[1]
-                    # Crea un target appropriato (semplificato)
-                    target = Target(target_type, 3.8, 4.2)  # Valori di esempio
-                elif " @hr " in step_detail:
-                    target_type = "heart.rate.zone"
-                    target_value = step_detail.split(" @hr ")[1].split(" -- ")[0] if " -- " in step_detail else step_detail.split(" @hr ")[1]
-                    # Crea un target appropriato (semplificato)
-                    target = Target(target_type, 140, 160)  # Valori di esempio
-                elif " @pwr " in step_detail:
-                    target_type = "power.zone"
-                    target_value = step_detail.split(" @pwr ")[1].split(" -- ")[0] if " -- " in step_detail else step_detail.split(" @pwr ")[1]
-                    # Crea un target appropriato (semplificato)
-                    target = Target(target_type, 200, 250)  # Valori di esempio
-                
-                # Estrai la descrizione
-                if " -- " in step_detail:
-                    description = step_detail.split(" -- ")[1]
-                
-                # Aggiorna il sottopasso
-                substep.step_type = step_type
-                substep.description = description
-                substep.end_condition = end_condition
-                substep.end_condition_value = end_value
-                substep.target = target or Target()
+                # Aggiungi i nuovi sottopassi
+                for substep_dict in steps:
+                    if isinstance(substep_dict, dict) and len(substep_dict) == 1:
+                        substep_type = list(substep_dict.keys())[0]
+                        substep_detail = substep_dict[substep_type]
+                        
+                        # Crea un nuovo passo con i dettagli forniti
+                        substep = self._create_step_from_details(substep_type, substep_detail)
+                        
+                        # Aggiungi il sottopasso alla ripetizione
+                        step.add_step(substep)
                 
                 # Aggiorna la lista degli step
                 self.update_steps_tree()
@@ -839,161 +838,95 @@ class WorkoutEditor(ttk.Frame):
                 # Aggiorna le statistiche
                 self.update_workout_stats()
         else:
-            # Passo principale
-            index = int(index_str) - 1  # Converti in indice 0-based
+            # Apri il dialog per i passi normali
+            dialog = StepDialog(
+                self, 
+                step_type=step.step_type, 
+                step_detail=self.format_step_details(step),
+                sport_type=self.current_workout.sport_type
+            )
             
-            # Ottieni il passo
-            step = self.current_workout.workout_steps[index]
+            if dialog.result:
+                step_type, step_detail = dialog.result
+                
+                # Crea un nuovo passo con i dettagli forniti
+                new_step = self._create_step_from_details(step_type, step_detail)
+                
+                # Aggiorna il passo esistente con i nuovi valori
+                step.step_type = new_step.step_type
+                step.description = new_step.description
+                step.end_condition = new_step.end_condition
+                step.end_condition_value = new_step.end_condition_value
+                step.target = new_step.target
+                
+                # Aggiorna la lista degli step
+                self.update_steps_tree()
+                
+                # Aggiorna il canvas
+                self.draw_workout()
+                
+                # Aggiorna le statistiche
+                self.update_workout_stats()
+
+    def _create_step_from_details(self, step_type, step_detail):
+        """
+        Crea un oggetto WorkoutStep dai dettagli forniti.
+        
+        Args:
+            step_type: Tipo di passo
+            step_detail: Dettagli del passo in formato stringa
             
-            # Se è un passo di tipo repeat, apri il dialog specifico
-            if step.step_type == "repeat":
-                dialog = RepeatDialog(
-                    self, 
-                    iterations=step.end_condition_value,
-                    steps=[{s.step_type: self.format_step_details(s)} for s in step.workout_steps],
-                    sport_type=self.current_workout.sport_type
-                )
-                
-                if dialog.result:
-                    iterations, steps = dialog.result
-                    
-                    # Aggiorna il numero di ripetizioni
-                    step.end_condition_value = iterations
-                    
-                    # Aggiorna i sottopassi
-                    step.workout_steps = []
-                    
-                    # Aggiungi i nuovi sottopassi
-                    for substep_dict in steps:
-                        if isinstance(substep_dict, dict) and len(substep_dict) == 1:
-                            substep_type = list(substep_dict.keys())[0]
-                            substep_detail = substep_dict[substep_type]
-                            
-                            # Estrai condizione di fine e valore (semplificato)
-                            end_condition = "lap.button"
-                            end_value = None
-                            description = ""
-                            target = None
-                            
-                            # Estrai la condizione di fine
-                            if substep_detail.startswith("lap-button"):
-                                end_condition = "lap.button"
-                                end_value = None
-                            elif "min" in substep_detail or ":" in substep_detail and " @ " not in substep_detail:
-                                end_condition = "time"
-                                end_value = substep_detail.split(" ")[0]
-                            elif "km" in substep_detail or "m" in substep_detail and "min" not in substep_detail:
-                                end_condition = "distance"
-                                end_value = substep_detail.split(" ")[0]
-                            
-                            # Estrai il target
-                            if " @ " in substep_detail:
-                                target_type = "pace.zone"
-                                target_value = substep_detail.split(" @ ")[1].split(" -- ")[0] if " -- " in substep_detail else substep_detail.split(" @ ")[1]
-                                # Crea un target appropriato (semplificato)
-                                target = Target(target_type, 3.8, 4.2)  # Valori di esempio
-                            elif " @hr " in substep_detail:
-                                target_type = "heart.rate.zone"
-                                target_value = substep_detail.split(" @hr ")[1].split(" -- ")[0] if " -- " in substep_detail else substep_detail.split(" @hr ")[1]
-                                # Crea un target appropriato (semplificato)
-                                target = Target(target_type, 140, 160)  # Valori di esempio
-                            elif " @pwr " in substep_detail:
-                                target_type = "power.zone"
-                                target_value = substep_detail.split(" @pwr ")[1].split(" -- ")[0] if " -- " in substep_detail else substep_detail.split(" @pwr ")[1]
-                                # Crea un target appropriato (semplificato)
-                                target = Target(target_type, 200, 250)  # Valori di esempio
-                            
-                            # Estrai la descrizione
-                            if " -- " in substep_detail:
-                                description = substep_detail.split(" -- ")[1]
-                            
-                            # Crea il passo
-                            substep = WorkoutStep(
-                                0,  # Sarà assegnato automaticamente
-                                substep_type,
-                                description,
-                                end_condition,
-                                end_value,
-                                target
-                            )
-                            
-                            # Aggiungi il sottopasso alla ripetizione
-                            step.add_step(substep)
-                    
-                    # Aggiorna la lista degli step
-                    self.update_steps_tree()
-                    
-                    # Aggiorna il canvas
-                    self.draw_workout()
-                    
-                    # Aggiorna le statistiche
-                    self.update_workout_stats()
-            else:
-                # Altrimenti, apri il dialog standard
-                dialog = StepDialog(
-                    self, 
-                    step_type=step.step_type, 
-                    step_detail=self.format_step_details(step),
-                    sport_type=self.current_workout.sport_type
-                )
-                
-                if dialog.result:
-                    step_type, step_detail = dialog.result
-                    
-                    # Estrai condizione di fine e valore
-                    end_condition = "lap.button"
-                    end_value = None
-                    description = ""
-                    target = None
-                    
-                    # Estrai la condizione di fine
-                    if step_detail.startswith("lap-button"):
-                        end_condition = "lap.button"
-                        end_value = None
-                    elif "min" in step_detail or ":" in step_detail and " @ " not in step_detail:
-                        end_condition = "time"
-                        end_value = step_detail.split(" ")[0]
-                    elif "km" in step_detail or "m" in step_detail and "min" not in step_detail:
-                        end_condition = "distance"
-                        end_value = step_detail.split(" ")[0]
-                    
-                    # Estrai il target
-                    if " @ " in step_detail:
-                        target_type = "pace.zone"
-                        target_value = step_detail.split(" @ ")[1].split(" -- ")[0] if " -- " in step_detail else step_detail.split(" @ ")[1]
-                        # Crea un target appropriato (semplificato)
-                        target = Target(target_type, 3.8, 4.2)  # Valori di esempio
-                    elif " @hr " in step_detail:
-                        target_type = "heart.rate.zone"
-                        target_value = step_detail.split(" @hr ")[1].split(" -- ")[0] if " -- " in step_detail else step_detail.split(" @hr ")[1]
-                        # Crea un target appropriato (semplificato)
-                        target = Target(target_type, 140, 160)  # Valori di esempio
-                    elif " @pwr " in step_detail:
-                        target_type = "power.zone"
-                        target_value = step_detail.split(" @pwr ")[1].split(" -- ")[0] if " -- " in step_detail else step_detail.split(" @pwr ")[1]
-                        # Crea un target appropriato (semplificato)
-                        target = Target(target_type, 200, 250)  # Valori di esempio
-                    
-                    # Estrai la descrizione
-                    if " -- " in step_detail:
-                        description = step_detail.split(" -- ")[1]
-                    
-                    # Aggiorna il passo
-                    step.step_type = step_type
-                    step.description = description
-                    step.end_condition = end_condition
-                    step.end_condition_value = end_value
-                    step.target = target or Target()
-                    
-                    # Aggiorna la lista degli step
-                    self.update_steps_tree()
-                    
-                    # Aggiorna il canvas
-                    self.draw_workout()
-                    
-                    # Aggiorna le statistiche
-                    self.update_workout_stats()
-    
+        Returns:
+            WorkoutStep: Nuovo passo configurato
+        """
+        # Estrai condizione di fine e valore
+        end_condition = "lap.button"
+        end_value = None
+        description = ""
+        target = None
+        
+        # Estrai la condizione di fine
+        if step_detail.startswith("lap-button"):
+            end_condition = "lap.button"
+            end_value = None
+        elif "min" in step_detail or ":" in step_detail and " @ " not in step_detail and " @hr " not in step_detail and " @pwr " not in step_detail:
+            end_condition = "time"
+            end_value = step_detail.split(" ")[0]
+        elif "km" in step_detail or "m" in step_detail and "min" not in step_detail:
+            end_condition = "distance"
+            end_value = step_detail.split(" ")[0]
+        
+        # Estrai il target
+        if " @ " in step_detail:
+            target_type = "pace.zone"
+            target_value = step_detail.split(" @ ")[1].split(" -- ")[0] if " -- " in step_detail else step_detail.split(" @ ")[1]
+            # Crea un target appropriato (semplificato)
+            target = Target(target_type, 3.8, 4.2)  # Valori di esempio
+        elif " @hr " in step_detail:
+            target_type = "heart.rate.zone"
+            target_value = step_detail.split(" @hr ")[1].split(" -- ")[0] if " -- " in step_detail else step_detail.split(" @hr ")[1]
+            # Crea un target appropriato (semplificato)
+            target = Target(target_type, 140, 160)  # Valori di esempio
+        elif " @pwr " in step_detail:
+            target_type = "power.zone"
+            target_value = step_detail.split(" @pwr ")[1].split(" -- ")[0] if " -- " in step_detail else step_detail.split(" @pwr ")[1]
+            # Crea un target appropriato (semplificato)
+            target = Target(target_type, 200, 250)  # Valori di esempio
+        
+        # Estrai la descrizione
+        if " -- " in step_detail:
+            description = step_detail.split(" -- ")[1]
+        
+        # Crea il passo
+        return WorkoutStep(
+            0,  # Sarà assegnato automaticamente
+            step_type,
+            description,
+            end_condition,
+            end_value,
+            target
+        )
+
     def delete_step(self):
         """Elimina lo step selezionato."""
         # Verifica che ci sia un allenamento corrente
@@ -1023,38 +956,50 @@ class WorkoutEditor(ttk.Frame):
         ):
             return
         
-        # Verifica se si tratta di un passo principale o di un sottopasso
-        if "." in index_str:
-            # Sottopasso di una ripetizione
-            main_index, sub_index = map(int, index_str.split("."))
-            main_index -= 1  # Converti in indice 0-based
-            sub_index -= 1   # Converti in indice 0-based
+        # Ottieni il percorso completo dell'indice
+        index_path = [int(x) for x in index_str.split(".")]
+        
+        # Funzione per trovare la lista che contiene il passo e il suo indice
+        def find_parent_container(steps, path, current_depth=0):
+            if current_depth >= len(path) - 1:
+                # Siamo arrivati al livello del genitore
+                return steps, path[-1] - 1  # Indice 0-based
             
-            # Ottieni il passo principale
-            main_step = self.current_workout.workout_steps[main_index]
+            current_index = path[current_depth] - 1  # Indice 0-based
             
-            # Verifica che sia un passo di tipo repeat
-            if main_step.step_type != "repeat":
-                return
+            if current_index < 0 or current_index >= len(steps):
+                return None, -1
             
-            # Rimuovi il sottopasso
-            main_step.workout_steps.pop(sub_index)
+            step = steps[current_index]
+            
+            if step.step_type == "repeat":
+                # Continua la ricerca nei sottopassi
+                return find_parent_container(step.workout_steps, path, current_depth + 1)
+            
+            return None, -1
+        
+        # Trova il contenitore e l'indice del passo da eliminare
+        container, index = find_parent_container(self.current_workout.workout_steps, index_path)
+        
+        if container is not None and 0 <= index < len(container):
+            # Rimuovi il passo dalla lista
+            container.pop(index)
+            
+            # Aggiorna la lista degli step
+            self.update_steps_tree()
+            
+            # Aggiorna il canvas
+            self.draw_workout()
+            
+            # Aggiorna le statistiche
+            self.update_workout_stats()
         else:
-            # Passo principale
-            index = int(index_str) - 1  # Converti in indice 0-based
-            
-            # Rimuovi il passo
-            self.current_workout.workout_steps.pop(index)
-        
-        # Aggiorna la lista degli step
-        self.update_steps_tree()
-        
-        # Aggiorna il canvas
-        self.draw_workout()
-        
-        # Aggiorna le statistiche
-        self.update_workout_stats()
-    
+            messagebox.showerror(
+                "Errore", 
+                "Impossibile trovare il passo da eliminare.",
+                parent=self
+            )
+
     def move_step_up(self):
         """Sposta lo step selezionato verso l'alto."""
         # Verifica che ci sia un allenamento corrente
@@ -1071,43 +1016,73 @@ class WorkoutEditor(ttk.Frame):
         item_values = self.steps_tree.item(item_id, "values")
         index_str = item_values[0]
         
-        # Verifica se si tratta di un passo principale o di un sottopasso
-        if "." in index_str:
-            # Sottopasso di una ripetizione
-            main_index, sub_index = map(int, index_str.split("."))
-            main_index -= 1  # Converti in indice 0-based
-            sub_index -= 1   # Converti in indice 0-based
-            
-            # Ottieni il passo principale
-            main_step = self.current_workout.workout_steps[main_index]
-            
-            # Verifica che sia un passo di tipo repeat
-            if main_step.step_type != "repeat":
-                return
-            
-            # Verifica che non sia già in cima
-            if sub_index <= 0:
-                return
-            
-            # Scambia i sottopassi
-            main_step.workout_steps[sub_index], main_step.workout_steps[sub_index-1] = main_step.workout_steps[sub_index-1], main_step.workout_steps[sub_index]
-        else:
-            # Passo principale
-            index = int(index_str) - 1  # Converti in indice 0-based
-            
-            # Verifica che non sia già in cima
-            if index <= 0:
-                return
-            
-            # Scambia i passi
-            self.current_workout.workout_steps[index], self.current_workout.workout_steps[index-1] = self.current_workout.workout_steps[index-1], self.current_workout.workout_steps[index]
+        # Ottieni il percorso completo dell'indice
+        index_path = [int(x) for x in index_str.split(".")]
         
-        # Aggiorna la lista degli step
-        self.update_steps_tree()
+        # Funzione per trovare la lista che contiene il passo e il suo indice
+        def find_parent_container(steps, path, current_depth=0):
+            if current_depth >= len(path) - 1:
+                # Siamo arrivati al livello del genitore
+                return steps, path[-1] - 1  # Indice 0-based
+            
+            current_index = path[current_depth] - 1  # Indice 0-based
+            
+            if current_index < 0 or current_index >= len(steps):
+                return None, -1
+            
+            step = steps[current_index]
+            
+            if step.step_type == "repeat":
+                # Continua la ricerca nei sottopassi
+                return find_parent_container(step.workout_steps, path, current_depth + 1)
+            
+            return None, -1
         
-        # Aggiorna il canvas
-        self.draw_workout()
-    
+        # Trova il contenitore e l'indice del passo da spostare
+        container, index = find_parent_container(self.current_workout.workout_steps, index_path)
+        
+        if container is not None and 0 < index < len(container):
+            # Scambia il passo con quello sopra
+            container[index], container[index-1] = container[index-1], container[index]
+            
+            # Aggiorna la lista degli step
+            self.update_steps_tree()
+            
+            # Aggiorna il canvas
+            self.draw_workout()
+            
+            # Prova a selezionare il passo spostato
+            # Costruisci il nuovo indice
+            new_index_path = index_path.copy()
+            new_index_path[-1] -= 1
+            new_index_str = ".".join(str(x) for x in new_index_path)
+            
+            # Cerca l'item con il nuovo indice
+            for item in self.steps_tree.get_children():
+                self._find_and_select_item_by_index(item, new_index_str)
+        
+    def _find_and_select_item_by_index(self, item, target_index):
+        """
+        Cerca ricorsivamente e seleziona un item con un dato indice.
+        
+        Args:
+            item: Item corrente da controllare
+            target_index: Indice target da cercare
+        """
+        # Controlla l'item corrente
+        values = self.steps_tree.item(item, "values")
+        if values and values[0] == target_index:
+            self.steps_tree.selection_set(item)
+            self.steps_tree.see(item)
+            return True
+        
+        # Controlla i figli dell'item
+        for child in self.steps_tree.get_children(item):
+            if self._find_and_select_item_by_index(child, target_index):
+                return True
+        
+        return False
+
     def move_step_down(self):
         """Sposta lo step selezionato verso il basso."""
         # Verifica che ci sia un allenamento corrente
@@ -1124,45 +1099,62 @@ class WorkoutEditor(ttk.Frame):
         item_values = self.steps_tree.item(item_id, "values")
         index_str = item_values[0]
         
-        # Verifica se si tratta di un passo principale o di un sottopasso
-        if "." in index_str:
-            # Sottopasso di una ripetizione
-            main_index, sub_index = map(int, index_str.split("."))
-            main_index -= 1  # Converti in indice 0-based
-            sub_index -= 1   # Converti in indice 0-based
-            
-            # Ottieni il passo principale
-            main_step = self.current_workout.workout_steps[main_index]
-            
-            # Verifica che sia un passo di tipo repeat
-            if main_step.step_type != "repeat":
-                return
-            
-            # Verifica che non sia già in fondo
-            if sub_index >= len(main_step.workout_steps) - 1:
-                return
-            
-            # Scambia i sottopassi
-            main_step.workout_steps[sub_index], main_step.workout_steps[sub_index+1] = main_step.workout_steps[sub_index+1], main_step.workout_steps[sub_index]
-        else:
-            # Passo principale
-            index = int(index_str) - 1  # Converti in indice 0-based
-            
-            # Verifica che non sia già in fondo
-            if index >= len(self.current_workout.workout_steps) - 1:
-                return
-            
-            # Scambia i passi
-            self.current_workout.workout_steps[index], self.current_workout.workout_steps[index+1] = self.current_workout.workout_steps[index+1], self.current_workout.workout_steps[index]
+        # Ottieni il percorso completo dell'indice
+        index_path = [int(x) for x in index_str.split(".")]
         
-        # Aggiorna la lista degli step
-        self.update_steps_tree()
+        # Funzione per trovare la lista che contiene il passo e il suo indice
+        def find_parent_container(steps, path, current_depth=0):
+            if current_depth >= len(path) - 1:
+                # Siamo arrivati al livello del genitore
+                return steps, path[-1] - 1  # Indice 0-based
+            
+            current_index = path[current_depth] - 1  # Indice 0-based
+            
+            if current_index < 0 or current_index >= len(steps):
+                return None, -1
+            
+            step = steps[current_index]
+            
+            if step.step_type == "repeat":
+                # Continua la ricerca nei sottopassi
+                return find_parent_container(step.workout_steps, path, current_depth + 1)
+            
+            return None, -1
         
-        # Aggiorna il canvas
-        self.draw_workout()
+        # Trova il contenitore e l'indice del passo da spostare
+        container, index = find_parent_container(self.current_workout.workout_steps, index_path)
+        
+        if container is not None and 0 <= index < len(container) - 1:
+            # Scambia il passo con quello sotto
+            container[index], container[index+1] = container[index+1], container[index]
+            
+            # Aggiorna la lista degli step
+            self.update_steps_tree()
+            
+            # Aggiorna il canvas
+            self.draw_workout()
+            
+            # Prova a selezionare il passo spostato
+            # Costruisci il nuovo indice
+            new_index_path = index_path.copy()
+            new_index_path[-1] += 1
+            new_index_str = ".".join(str(x) for x in new_index_path)
+            
+            # Cerca l'item con il nuovo indice
+            for item in self.steps_tree.get_children():
+                self._find_and_select_item_by_index(item, new_index_str)
     
     def on_step_double_click(self, event):
         """Gestisce il doppio click su uno step."""
+        # Forza l'aggiornamento delle zone prima di modificare lo step
+        try:
+            # Ottieni i valori aggiornati delle zone dalla configurazione
+            if hasattr(self.controller, 'controller') and hasattr(self.controller.controller, 'zones_frame'):
+                self.controller.controller.zones_frame.refresh_data()
+        except Exception as e:
+            logging.error(f"Errore nell'aggiornamento delle zone: {str(e)}")
+        
+        # Modifica lo step
         self.edit_step()
     
     def on_step_select(self, event):

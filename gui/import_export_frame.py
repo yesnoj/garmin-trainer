@@ -495,6 +495,10 @@ class ImportExportFrame(ttk.Frame):
                 
                 # Salva la configurazione
                 self.controller.save_config()
+                
+                # Aggiorna la tab Zone se è stata creata
+                if hasattr(self.controller, 'zones_frame'):
+                    self.after(0, self.controller.zones_frame.refresh_data)
             
             # Integra gli allenamenti in quelli esistenti
             for workout in workouts:
@@ -525,7 +529,8 @@ class ImportExportFrame(ttk.Frame):
             # Mostra un messaggio di conferma
             self.after(0, lambda: messagebox.showinfo(
                 "Importazione completata", 
-                f"Sono stati importati {len(workouts)} allenamenti.", 
+                f"Sono stati importati {len(workouts)} allenamenti.\n"
+                f"Le zone sono state aggiornate dalla configurazione importata.", 
                 parent=self
             ))
         
@@ -635,6 +640,10 @@ class ImportExportFrame(ttk.Frame):
                 
                 # Salva la configurazione
                 self.controller.save_config()
+                
+                # Aggiorna la tab Zone se è stata creata
+                if hasattr(self.controller, 'zones_frame'):
+                    self.after(0, self.controller.zones_frame.refresh_data)
             
             # Integra gli allenamenti in quelli esistenti
             for workout in workouts:
@@ -665,7 +674,8 @@ class ImportExportFrame(ttk.Frame):
             # Mostra un messaggio di conferma
             self.after(0, lambda: messagebox.showinfo(
                 "Importazione completata", 
-                f"Sono stati importati {len(workouts)} allenamenti.", 
+                f"Sono stati importati {len(workouts)} allenamenti.\n"
+                f"Le zone sono state aggiornate dalla configurazione importata.", 
                 parent=self
             ))
         
