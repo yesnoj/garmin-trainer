@@ -1,0 +1,1 @@
+"""Core dell'applicazione Garmin Trainer."""

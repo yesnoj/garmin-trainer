@@ -1,0 +1,1 @@
+"""Interfaccia grafica dell'applicazione Garmin Trainer."""

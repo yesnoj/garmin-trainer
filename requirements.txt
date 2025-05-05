@@ -1,0 +1,5 @@
+garth>=0.4.32
+PyYAML>=6.0
+pandas>=1.3.0
+openpyxl>=3.0.9
+tkcalendar>=1.6.1

@@ -1,0 +1,1 @@
+"""Dialog per l'applicazione Garmin Trainer."""
