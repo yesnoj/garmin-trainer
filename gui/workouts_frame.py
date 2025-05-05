@@ -73,7 +73,8 @@ class WorkoutsFrame(ttk.Frame):
         
         # Configura il pannello destro (editor allenamento)
         self.workout_editor = WorkoutEditor(right_frame, self)
-        
+        self.workout_editor.pack(fill=tk.BOTH, expand=True)  # Aggiungi questa riga
+
         # Disabilita l'editor inizialmente
         self.workout_editor.disable_editor()
     
@@ -398,6 +399,9 @@ class WorkoutsFrame(ttk.Frame):
         
         # Carica l'allenamento nell'editor
         self.workout_editor.load_workout(workout)
+        
+        # Explicitly enable the editor (add this line)
+        self.workout_editor.enable_editor()
         
         # Imposta l'allenamento corrente
         self.current_workout = workout
