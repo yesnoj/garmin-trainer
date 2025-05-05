@@ -1,0 +1,46 @@
+{
+  "oauth_folder": "~/.garth",
+  "workout_config": {
+    "margins": {
+      "faster": "0:03",
+      "hr_down": 5,
+      "hr_up": 5,
+      "power_down": 10,
+      "power_up": 10,
+      "slower": "0:03"
+    },
+    "name_prefix": "",
+    "athlete_name": "Atleta",
+    "race_day": "2025-10-30",
+    "preferred_days": "[1, 3, 5]",
+    "heart_rates": {
+      "Z1_HR": "110-130",
+      "Z2_HR": "130-150",
+      "Z3_HR": "150-165",
+      "Z4_HR": "165-175",
+      "Z5_HR": "175-185",
+      "max_hr": 180
+    },
+    "paces": {
+      "Z1": "6:30",
+      "Z2": "6:00",
+      "Z3": "5:30",
+      "Z4": "5:00",
+      "Z5": "4:30",
+      "marathon": "5:20",
+      "recovery": "7:00",
+      "threshold": "5:10"
+    },
+    "power_values": {
+      "Z1": "125-175",
+      "Z2": "175-215",
+      "Z3": "215-250",
+      "Z4": "250-300",
+      "Z5": "300-375",
+      "ftp": 250,
+      "sweet_spot": "220-235",
+      "threshold": "235-265"
+    }
+  },
+  "email": "jonsey2383@gmail.com"
+}

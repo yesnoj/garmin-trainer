@@ -11,11 +11,11 @@ import datetime
 import re
 import logging
 
-from ..core.utils import format_workout_name, parse_workout_name
-from ..core.workout import Workout, WorkoutStep, Target
-from .dialogs.step_dialog import StepDialog
-from .dialogs.repeat_dialog import RepeatDialog
-from .styles import COLORS, STEP_ICONS, SPORT_ICONS
+from core.utils import format_workout_name, parse_workout_name
+from core.workout import Workout, WorkoutStep, Target
+from gui.dialogs.step_dialog import StepDialog
+from gui.dialogs.repeat_dialog import RepeatDialog
+from gui.styles import COLORS, STEP_ICONS, SPORT_ICONS
 
 class WorkoutEditor(ttk.Frame):
     """Editor per la creazione e modifica degli allenamenti."""
@@ -28,10 +28,11 @@ class WorkoutEditor(ttk.Frame):
             parent: Widget genitore
             controller: WorkoutsFrame che contiene l'editor
         """
+
         super().__init__(parent)
         self.controller = controller
         self.parent = parent
-        
+        self.workouts = []
         # Workout corrente
         self.current_workout = None
         
@@ -555,6 +556,24 @@ class WorkoutEditor(ttk.Frame):
         
         return " ".join(result)
     
+    def on_login(self, client):
+        """
+        Gestisce l'evento di login completato.
+        
+        Args:
+            client: Istanza di GarminClient con login effettuato
+        """
+        # Salva il riferimento al client Garmin
+        self.garmin_client = client
+        
+        # Aggiorna l'interfaccia utente se necessario
+        self.refresh_data()
+        
+    def refresh_data(self):
+        """Aggiorna i dati dell'interfaccia."""
+        # Qui puoi aggiungere il codice per aggiornare l'interfaccia con i dati da Garmin
+        pass
+
     def add_step(self):
         """Aggiunge un nuovo passo all'allenamento."""
         # Verifica che ci sia un allenamento corrente
@@ -1714,6 +1733,29 @@ class WorkoutEditor(ttk.Frame):
             f"L'allenamento '{self.current_workout.workout_name}' è stato salvato.", 
             parent=self
         )
+    
+    def update_workouts_list(self):
+        """
+        Aggiorna la lista degli allenamenti nell'interfaccia.
+        """
+        # Qui puoi implementare il codice per aggiornare una lista o una tabella
+        # che mostra gli allenamenti disponibili
+        
+        # Se hai una Treeview o un altro widget per mostrare gli allenamenti:
+        # 1. Cancella tutti gli elementi esistenti
+        # 2. Aggiungi gli elementi dalla lista self.workouts
+        
+        # Esempio di base (adatta secondo i tuoi widget):
+        if hasattr(self, 'workouts_tree'):
+            # Cancella tutti gli elementi esistenti
+            for item in self.workouts_tree.get_children():
+                self.workouts_tree.delete(item)
+            
+            # Aggiungi i nuovi elementi
+            for i, workout in enumerate(self.workouts):
+                values = [i+1, workout.workout_name, workout.sport_type, workout.get_scheduled_date() or ""]
+                self.workouts_tree.insert("", "end", values=values)
+
     
     def cancel_edit(self):
         """Annulla le modifiche correnti."""

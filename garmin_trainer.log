@@ -1,0 +1,41 @@
+2025-05-05 12:00:45,538 - root - INFO - Nessun token valido trovato, login manuale richiesto.
+2025-05-05 12:01:25,869 - root - INFO - Nessun token valido trovato, login manuale richiesto.
+2025-05-05 12:05:49,507 - root - INFO - Nessun token valido trovato, login manuale richiesto.
+2025-05-05 12:06:14,970 - root - INFO - Nessun token valido trovato, login manuale richiesto.
+2025-05-05 12:07:12,437 - urllib3.connectionpool - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1028)'))': /sso/embed?id=gauth-widget&embedWidget=true&gauthHost=https%3A%2F%2Fsso.garmin.com%2Fsso
+2025-05-05 12:07:13,487 - urllib3.connectionpool - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1028)'))': /sso/embed?id=gauth-widget&embedWidget=true&gauthHost=https%3A%2F%2Fsso.garmin.com%2Fsso
+2025-05-05 12:07:15,535 - urllib3.connectionpool - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1028)'))': /sso/embed?id=gauth-widget&embedWidget=true&gauthHost=https%3A%2F%2Fsso.garmin.com%2Fsso
+2025-05-05 12:07:15,585 - root - ERROR - Errore durante il login: HTTPSConnectionPool(host='sso.garmin.com', port=443): Max retries exceeded with url: /sso/embed?id=gauth-widget&embedWidget=true&gauthHost=https%3A%2F%2Fsso.garmin.com%2Fsso (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1028)')))
+2025-05-05 12:07:32,287 - urllib3.connectionpool - WARNING - Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1028)'))': /sso/embed?id=gauth-widget&embedWidget=true&gauthHost=https%3A%2F%2Fsso.garmin.com%2Fsso
+2025-05-05 12:07:33,337 - urllib3.connectionpool - WARNING - Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1028)'))': /sso/embed?id=gauth-widget&embedWidget=true&gauthHost=https%3A%2F%2Fsso.garmin.com%2Fsso
+2025-05-05 12:07:35,384 - urllib3.connectionpool - WARNING - Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1028)'))': /sso/embed?id=gauth-widget&embedWidget=true&gauthHost=https%3A%2F%2Fsso.garmin.com%2Fsso
+2025-05-05 12:07:35,432 - root - ERROR - Errore durante il login: HTTPSConnectionPool(host='sso.garmin.com', port=443): Max retries exceeded with url: /sso/embed?id=gauth-widget&embedWidget=true&gauthHost=https%3A%2F%2Fsso.garmin.com%2Fsso (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1028)')))
+2025-05-05 12:11:52,099 - root - INFO - Configurazione salvata.
+2025-05-05 12:13:05,677 - root - INFO - Configurazione salvata.
+2025-05-05 12:13:05,677 - root - ERROR - Errore nell'importazione da YAML: 'WorkoutEditor' object has no attribute 'workouts'
+2025-05-05 12:13:36,270 - root - INFO - Configurazione salvata.
+2025-05-05 12:13:36,270 - root - ERROR - Errore nell'importazione da YAML: 'WorkoutEditor' object has no attribute 'workouts'
+2025-05-05 12:14:23,154 - root - INFO - Nessun token valido trovato, login manuale richiesto.
+2025-05-05 12:14:38,394 - root - INFO - Configurazione salvata.
+2025-05-05 12:17:03,322 - root - INFO - Nessun token valido trovato, login manuale richiesto.
+2025-05-05 12:17:18,237 - root - INFO - Configurazione salvata.
+2025-05-05 12:17:33,639 - root - INFO - Configurazione salvata.
+2025-05-05 12:17:33,640 - root - ERROR - Errore nell'importazione da YAML: 'WorkoutEditor' object has no attribute 'workouts'
+2025-05-05 12:19:41,293 - root - INFO - Nessun token valido trovato, login manuale richiesto.
+2025-05-05 12:19:57,416 - root - INFO - Configurazione salvata.
+2025-05-05 12:20:03,654 - root - INFO - Configurazione salvata.
+2025-05-05 12:20:03,654 - root - ERROR - Errore nell'importazione da YAML: 'WorkoutEditor' object has no attribute 'update_workouts_list'
+2025-05-05 12:22:57,361 - root - INFO - Nessun token valido trovato, login manuale richiesto.
+2025-05-05 12:23:10,284 - root - INFO - Configurazione salvata.
+2025-05-05 12:23:20,456 - root - INFO - Configurazione salvata.
+2025-05-05 12:23:20,457 - root - ERROR - Errore nell'importazione da YAML: 'WorkoutEditor' object has no attribute 'update_workouts_list'
+2025-05-05 12:23:37,878 - root - ERROR - Errore nel caricamento del file Excel: 'Chiave'
+2025-05-05 12:23:37,878 - root - ERROR - Errore nell'importazione da Excel: 'Chiave'
+2025-05-05 12:25:20,672 - root - INFO - Configurazione salvata.
+2025-05-05 12:25:20,672 - root - ERROR - Errore nell'importazione da YAML: 'WorkoutEditor' object has no attribute 'update_workouts_list'
+2025-05-05 12:26:42,618 - root - INFO - Nessun token valido trovato, login manuale richiesto.
+2025-05-05 12:26:51,566 - root - INFO - Configurazione salvata.
+2025-05-05 12:27:00,601 - root - INFO - Configurazione salvata.
+2025-05-05 12:30:21,633 - root - INFO - Nessun token valido trovato, login manuale richiesto.
+2025-05-05 12:30:35,683 - root - INFO - Configurazione salvata.
+2025-05-05 12:30:44,174 - root - INFO - Configurazione salvata.

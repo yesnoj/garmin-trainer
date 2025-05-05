@@ -9,8 +9,8 @@ import tkinter as tk
 from tkinter import ttk
 import copy
 
-from ...core.workout import STEP_TYPES
-from .step_dialog import StepDialog
+from core.workout import STEP_TYPES
+from gui.dialogs.step_dialog import StepDialog
 
 class RepeatDialog:
     """Dialog per creare o modificare passi di ripetizione."""

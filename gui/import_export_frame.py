@@ -13,8 +13,8 @@ import os
 import json
 import datetime
 
-from ..core.utils import load_yaml, save_yaml, load_excel, save_excel, create_excel_template
-from ..core.workout import Workout, WorkoutStep, Target
+from core.utils import load_yaml, save_yaml, load_excel, save_excel, create_excel_template
+from core.workout import Workout, WorkoutStep, Target
 
 class ImportExportFrame(ttk.Frame):
     """Frame per l'importazione e l'esportazione degli allenamenti."""
@@ -538,12 +538,14 @@ class ImportExportFrame(ttk.Frame):
             ))
             
             # Mostra un messaggio di errore
+            error_msg = str(e)  # Cattura il valore di 'e' fuori dalla lambda
             self.after(0, lambda: messagebox.showerror(
                 "Errore", 
-                f"Si è verificato un errore durante l'importazione:\n{str(e)}", 
+                f"Si è verificato un errore durante l'importazione:\n{error_msg}", 
                 parent=self
             ))
-    
+
+
     def import_excel(self):
         """Importa allenamenti da un file Excel."""
         # Verifica che ci sia un percorso valido
