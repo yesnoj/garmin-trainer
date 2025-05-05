@@ -11,11 +11,11 @@ from tkinter import ttk
 import logging
 import os
 
-from .styles import setup_styles
-from .login_frame import LoginFrame
-from .workouts_frame import WorkoutsFrame
-from .import_export_frame import ImportExportFrame
-from ..core.utils import load_config, save_config
+from gui.styles import setup_styles
+from gui.login_frame import LoginFrame
+from gui.workouts_frame import WorkoutsFrame
+from gui.import_export_frame import ImportExportFrame
+from core.utils import load_config, save_config
 
 class GarminTrainerApp:
     """Classe principale dell'applicazione Garmin Trainer."""

@@ -11,7 +11,8 @@ import threading
 import logging
 import os
 
-from ..core.garmin_client import GarminClient
+from core.garmin_client import GarminClient
+
 
 class LoginFrame(ttk.Frame):
     """Frame per il login a Garmin Connect."""

@@ -9,7 +9,8 @@ import tkinter as tk
 from tkinter import ttk
 import re
 
-from ...core.workout import STEP_TYPES
+from core.workout import STEP_TYPES
+
 
 class StepDialog:
     """Dialog per creare o modificare passi dell'allenamento."""

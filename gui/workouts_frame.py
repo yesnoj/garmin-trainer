@@ -13,10 +13,10 @@ import datetime
 import re
 import os
 
-from ..core.utils import format_workout_name, parse_workout_name
-from ..core.workout import Workout, WorkoutStep, Target
+from core.utils import format_workout_name, parse_workout_name
+from core.workout import Workout, WorkoutStep, Target
 from .workout_editor import WorkoutEditor
-from .styles import SPORT_ICONS, STEP_ICONS, COLORS
+from gui.styles import SPORT_ICONS, STEP_ICONS, COLORS
 
 class WorkoutsFrame(ttk.Frame):
     """Frame per la gestione degli allenamenti."""

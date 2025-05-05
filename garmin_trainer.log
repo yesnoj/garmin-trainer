@@ -39,3 +39,56 @@
 2025-05-05 12:30:21,633 - root - INFO - Nessun token valido trovato, login manuale richiesto.
 2025-05-05 12:30:35,683 - root - INFO - Configurazione salvata.
 2025-05-05 12:30:44,174 - root - INFO - Configurazione salvata.
+2025-05-05 13:56:07,576 - root - INFO - Nessun token valido trovato, login manuale richiesto.
+2025-05-05 13:56:55,413 - root - INFO - Configurazione salvata.
+2025-05-05 13:56:56,072 - root - INFO - Recupero allenamento 1203927595
+2025-05-05 13:56:56,301 - root - INFO - Recupero allenamento 1201982639
+2025-05-05 13:56:56,575 - root - INFO - Recupero allenamento 1201672790
+2025-05-05 13:56:56,791 - root - INFO - Recupero allenamento 1182246901
+2025-05-05 13:56:57,033 - root - INFO - Recupero allenamento 1172823841
+2025-05-05 13:56:57,267 - root - INFO - Recupero allenamento 1166366937
+2025-05-05 13:56:57,508 - root - INFO - Recupero allenamento 1162645142
+2025-05-05 13:56:57,745 - root - ERROR - Errore nella conversione del passo: Unknown format code 'd' for object of type 'float'
+2025-05-05 13:56:57,746 - root - INFO - Recupero allenamento 1157283693
+2025-05-05 13:56:57,997 - root - INFO - Recupero allenamento 1156018457
+2025-05-05 13:56:58,233 - root - INFO - Recupero allenamento 1140237621
+2025-05-05 13:59:25,337 - root - INFO - Configurazione salvata.
+2025-05-05 14:07:54,445 - root - INFO - Nessun token valido trovato, login manuale richiesto.
+2025-05-05 14:08:06,186 - root - INFO - Configurazione salvata.
+2025-05-05 14:08:07,076 - root - INFO - Recupero allenamento 1203927595
+2025-05-05 14:08:07,432 - root - INFO - Recupero allenamento 1201982639
+2025-05-05 14:08:07,666 - root - INFO - Recupero allenamento 1201672790
+2025-05-05 14:08:07,979 - root - INFO - Recupero allenamento 1182246901
+2025-05-05 14:08:08,247 - root - INFO - Recupero allenamento 1172823841
+2025-05-05 14:08:08,503 - root - INFO - Recupero allenamento 1166366937
+2025-05-05 14:08:08,782 - root - INFO - Recupero allenamento 1162645142
+2025-05-05 14:08:09,145 - root - ERROR - Errore nella conversione del passo: Unknown format code 'd' for object of type 'float'
+2025-05-05 14:08:09,145 - root - INFO - Recupero allenamento 1157283693
+2025-05-05 14:08:09,419 - root - INFO - Recupero allenamento 1156018457
+2025-05-05 14:08:09,659 - root - INFO - Recupero allenamento 1140237621
+2025-05-05 14:15:34,015 - root - INFO - Nessun token valido trovato, login manuale richiesto.
+2025-05-05 14:15:44,786 - root - INFO - Configurazione salvata.
+2025-05-05 14:15:45,466 - root - INFO - Recupero allenamento 1203927595
+2025-05-05 14:15:45,703 - root - INFO - Recupero allenamento 1201982639
+2025-05-05 14:15:45,932 - root - INFO - Recupero allenamento 1201672790
+2025-05-05 14:15:46,143 - root - INFO - Recupero allenamento 1182246901
+2025-05-05 14:15:46,417 - root - INFO - Recupero allenamento 1172823841
+2025-05-05 14:15:46,707 - root - INFO - Recupero allenamento 1166366937
+2025-05-05 14:15:46,967 - root - INFO - Recupero allenamento 1162645142
+2025-05-05 14:15:47,178 - root - ERROR - Errore nella conversione del passo: Unknown format code 'd' for object of type 'float'
+2025-05-05 14:15:47,178 - root - INFO - Recupero allenamento 1157283693
+2025-05-05 14:15:47,512 - root - INFO - Recupero allenamento 1156018457
+2025-05-05 14:15:47,787 - root - INFO - Recupero allenamento 1140237621
+2025-05-05 14:16:47,196 - root - INFO - Nessun token valido trovato, login manuale richiesto.
+2025-05-05 14:16:56,869 - root - INFO - Configurazione salvata.
+2025-05-05 14:16:57,449 - root - INFO - Recupero allenamento 1203927595
+2025-05-05 14:16:57,691 - root - INFO - Recupero allenamento 1201982639
+2025-05-05 14:16:57,930 - root - INFO - Recupero allenamento 1201672790
+2025-05-05 14:16:58,162 - root - INFO - Recupero allenamento 1182246901
+2025-05-05 14:16:58,420 - root - INFO - Recupero allenamento 1172823841
+2025-05-05 14:16:59,058 - root - INFO - Recupero allenamento 1166366937
+2025-05-05 14:16:59,290 - root - INFO - Recupero allenamento 1162645142
+2025-05-05 14:16:59,504 - root - ERROR - Errore nella conversione del passo: Unknown format code 'd' for object of type 'float'
+2025-05-05 14:16:59,505 - root - INFO - Recupero allenamento 1157283693
+2025-05-05 14:16:59,735 - root - INFO - Recupero allenamento 1156018457
+2025-05-05 14:16:59,981 - root - INFO - Recupero allenamento 1140237621
