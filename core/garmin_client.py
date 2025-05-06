@@ -24,11 +24,29 @@ class GarminClient:
         Args:
             oauth_folder: Cartella dove sono memorizzati i token OAuth
         """
+        # Disabilita la verifica SSL a livello globale
+        import ssl
+        import requests
+        from urllib3.exceptions import InsecureRequestWarning
+        
+        # Disattiva gli avvisi di sicurezza per le richieste non verificate
+        requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+        
+        # Configura un contesto SSL non verificato
+        ssl._create_default_https_context = ssl._create_unverified_context
+        
         # Espandi il percorso della home se necessario
-        self.oauth_folder = os.path.expanduser(oauth_folder)
+        self.oauth_folder = os.path.normpath(os.path.expanduser(oauth_folder))
         
         # Crea la directory se non esiste
         os.makedirs(self.oauth_folder, exist_ok=True)
+        
+        # Configura garth per disabilitare la verifica SSL
+        try:
+            import garth
+            garth.configure(verify_ssl=False)
+        except:
+            pass
         
         # Prova a riprendere la sessione esistente
         try:
@@ -51,8 +69,21 @@ class GarminClient:
             bool: True se il login è riuscito, False altrimenti
         """
         try:
+            # Disabilita gli avvisi SSL
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            
+            # Disabilita la verifica SSL in garth 
+            import ssl
+            original_context = ssl._create_default_https_context
+            ssl._create_default_https_context = ssl._create_unverified_context
+            
+            # Effettua il login
             garth.login(email, password)
             self.logged_in = True
+            
+            # Ripristina il contesto SSL originale
+            ssl._create_default_https_context = original_context
             
             if save_token:
                 garth.save(self.oauth_folder)

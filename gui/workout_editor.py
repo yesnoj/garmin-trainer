@@ -496,7 +496,7 @@ class WorkoutEditor(ttk.Frame):
         
         # Condizione di fine
         if step.end_condition == "lap.button":
-            result.append("Pulsante lap")
+            result.append("lap-button")
         elif step.end_condition == "time":
             value = step.end_condition_value
             if isinstance(value, int) or (isinstance(value, str) and value.isdigit()):
@@ -532,11 +532,35 @@ class WorkoutEditor(ttk.Frame):
             else:
                 result.append(str(value))
         else:
-            result.append(step.end_condition_value)
+            result.append(str(step.end_condition_value))
         
-        # Target
+        # Aggiungi il target formattato
         if step.target and step.target.target != "no.target":
-            result.append(step.target.format_target())
+            target_type = step.target.target
+            
+            # Usa il nome della zona salvato, se disponibile
+            zone_name = getattr(step.target, 'zone_name', None)
+            
+            if target_type == "pace.zone":
+                if zone_name:
+                    result.append(f"@ {zone_name}")
+                else:
+                    result.append(f"@ {step.target.format_target()}")
+                    
+            elif target_type == "heart.rate.zone":
+                if zone_name:
+                    result.append(f"@hr {zone_name}")
+                else:
+                    result.append(f"@hr {step.target.format_target()}")
+                    
+            elif target_type == "power.zone":
+                if zone_name:
+                    result.append(f"@pwr {zone_name}")
+                else:
+                    result.append(f"@pwr {step.target.format_target()}")
+            else:
+                # Per altri tipi di target, usa il formato standard
+                result.append(step.target.format_target())
         
         # Descrizione
         if step.description:
@@ -798,6 +822,14 @@ class WorkoutEditor(ttk.Frame):
             )
             return
         
+        # Forza l'aggiornamento delle zone prima di modificare lo step
+        try:
+            # Ottieni i valori aggiornati delle zone dalla configurazione
+            if hasattr(self.controller, 'controller') and hasattr(self.controller.controller, 'zones_frame'):
+                self.controller.controller.zones_frame.refresh_data()
+        except Exception as e:
+            logging.error(f"Errore nell'aggiornamento delle zone: {str(e)}")
+        
         # Gestisci il tipo di passo
         if step.step_type == "repeat":
             # Apri il dialog per le ripetizioni
@@ -838,11 +870,14 @@ class WorkoutEditor(ttk.Frame):
                 # Aggiorna le statistiche
                 self.update_workout_stats()
         else:
+            # Prepara i dettagli del passo per il dialog
+            formatted_details = self.format_step_details(step)
+            
             # Apri il dialog per i passi normali
             dialog = StepDialog(
                 self, 
                 step_type=step.step_type, 
-                step_detail=self.format_step_details(step),
+                step_detail=formatted_details,
                 sport_type=self.current_workout.sport_type
             )
             
@@ -896,26 +931,164 @@ class WorkoutEditor(ttk.Frame):
             end_condition = "distance"
             end_value = step_detail.split(" ")[0]
         
-        # Estrai il target
-        if " @ " in step_detail:
-            target_type = "pace.zone"
-            target_value = step_detail.split(" @ ")[1].split(" -- ")[0] if " -- " in step_detail else step_detail.split(" @ ")[1]
-            # Crea un target appropriato (semplificato)
-            target = Target(target_type, 3.8, 4.2)  # Valori di esempio
-        elif " @hr " in step_detail:
-            target_type = "heart.rate.zone"
-            target_value = step_detail.split(" @hr ")[1].split(" -- ")[0] if " -- " in step_detail else step_detail.split(" @hr ")[1]
-            # Crea un target appropriato (semplificato)
-            target = Target(target_type, 140, 160)  # Valori di esempio
-        elif " @pwr " in step_detail:
-            target_type = "power.zone"
-            target_value = step_detail.split(" @pwr ")[1].split(" -- ")[0] if " -- " in step_detail else step_detail.split(" @pwr ")[1]
-            # Crea un target appropriato (semplificato)
-            target = Target(target_type, 200, 250)  # Valori di esempio
-        
         # Estrai la descrizione
         if " -- " in step_detail:
             description = step_detail.split(" -- ")[1]
+        
+        # Estrai il target e crea l'oggetto Target appropriato
+        config = self.controller.controller.config if hasattr(self.controller, 'controller') else {}
+        workout_config = config.get('workout_config', {})
+        
+        if " @ " in step_detail:
+            target_type = "pace.zone"
+            target_value = step_detail.split(" @ ")[1].split(" -- ")[0] if " -- " in step_detail else step_detail.split(" @ ")[1]
+            
+            # Ottieni i valori di ritmo dalla configurazione
+            paces = workout_config.get('paces', {})
+            
+            # Salva il nome della zona originale nella descrizione se non c'è già una descrizione
+            zone_name = target_value.strip()
+            if not description and zone_name in paces:
+                description = f"Zona {zone_name}"
+            
+            if zone_name in paces:
+                pace_str = paces[zone_name]
+                # Converti il ritmo in m/s per i valori target
+                from core.utils import pace_to_ms
+                try:
+                    pace_ms = pace_to_ms(pace_str)
+                    # Aggiungi o sottrai i margini per il range
+                    margins = workout_config.get('margins', {})
+                    faster_sec = int(margins.get('faster', '0:03').split(':')[1]) if ':' in margins.get('faster', '0:03') else 0
+                    slower_sec = int(margins.get('slower', '0:03').split(':')[1]) if ':' in margins.get('slower', '0:03') else 0
+                    
+                    # Converti i secondi in variazione di m/s per il ritmo
+                    base_pace_s = 1000 / pace_ms  # secondi per km
+                    faster_pace_s = base_pace_s - faster_sec
+                    slower_pace_s = base_pace_s + slower_sec
+                    
+                    to_value = 1000 / faster_pace_s if faster_pace_s > 0 else pace_ms * 1.1
+                    from_value = 1000 / slower_pace_s if slower_pace_s > 0 else pace_ms * 0.9
+                    
+                    # Crea un target con il nome della zona salvato come attributo extra
+                    target = Target(target_type, to_value, from_value)
+                    target.zone_name = zone_name  # Aggiungi un attributo personalizzato
+                except:
+                    # Fallback in caso di errore
+                    target = Target(target_type, 3.8, 4.2)
+                    target.zone_name = zone_name
+            else:
+                # Valori di default se la zona non è trovata
+                target = Target(target_type, 3.8, 4.2)
+                target.zone_name = zone_name
+                
+        elif " @hr " in step_detail:
+            target_type = "heart.rate.zone"
+            target_value = step_detail.split(" @hr ")[1].split(" -- ")[0] if " -- " in step_detail else step_detail.split(" @hr ")[1]
+            
+            # Salva il nome della zona originale
+            zone_name = target_value.strip()
+            if not description:
+                description = f"FC {zone_name}"
+            
+            # Ottieni i valori HR dalla configurazione
+            heart_rates = workout_config.get('heart_rates', {})
+            if zone_name in heart_rates:
+                hr_str = heart_rates[zone_name]
+                if '-' in hr_str:
+                    try:
+                        # Formato "min-max"
+                        hr_parts = hr_str.split('-')
+                        from_value = int(hr_parts[0])
+                        to_value = int(hr_parts[1])
+                        target = Target(target_type, to_value, from_value)
+                        target.zone_name = zone_name
+                    except:
+                        # Gestisci il formato percentuale, e.g., "70-80% max_hr"
+                        try:
+                            if "% max_hr" in hr_str:
+                                max_hr = int(heart_rates.get('max_hr', 180))
+                                hr_parts = hr_str.split('-')
+                                from_pct = int(hr_parts[0].replace('%', '').strip())
+                                to_pct = int(hr_parts[1].split('%')[0].strip())
+                                from_value = max_hr * from_pct // 100
+                                to_value = max_hr * to_pct // 100
+                                target = Target(target_type, to_value, from_value)
+                                target.zone_name = zone_name
+                            else:
+                                # Fallback
+                                target = Target(target_type, 160, 140)
+                                target.zone_name = zone_name
+                        except:
+                            # Fallback
+                            target = Target(target_type, 160, 140)
+                            target.zone_name = zone_name
+                else:
+                    # Valore singolo
+                    try:
+                        hr_value = int(hr_str)
+                        # Aggiungi o sottrai i margini per il range
+                        margins = workout_config.get('margins', {})
+                        hr_up = int(margins.get('hr_up', 5))
+                        hr_down = int(margins.get('hr_down', 5))
+                        target = Target(target_type, hr_value + hr_up, hr_value - hr_down)
+                        target.zone_name = zone_name
+                    except:
+                        # Fallback
+                        target = Target(target_type, 160, 140)
+                        target.zone_name = zone_name
+            else:
+                # Valori di default se la zona non è trovata
+                target = Target(target_type, 160, 140)
+                target.zone_name = zone_name
+                
+        elif " @pwr " in step_detail:
+            target_type = "power.zone"
+            target_value = step_detail.split(" @pwr ")[1].split(" -- ")[0] if " -- " in step_detail else step_detail.split(" @pwr ")[1]
+            
+            # Salva il nome della zona originale
+            zone_name = target_value.strip()
+            if not description:
+                description = f"Potenza {zone_name}"
+            
+            # Ottieni i valori di potenza dalla configurazione
+            power_values = workout_config.get('power_values', {})
+            if zone_name in power_values:
+                pwr_str = str(power_values[zone_name])
+                if '-' in pwr_str:
+                    try:
+                        # Formato "min-max"
+                        pwr_parts = pwr_str.split('-')
+                        from_value = int(pwr_parts[0])
+                        to_value = int(pwr_parts[1])
+                        target = Target(target_type, to_value, from_value)
+                        target.zone_name = zone_name
+                    except:
+                        # Fallback
+                        target = Target(target_type, 250, 200)
+                        target.zone_name = zone_name
+                else:
+                    # Valore singolo
+                    try:
+                        pwr_value = int(pwr_str)
+                        # Aggiungi o sottrai i margini per il range
+                        margins = workout_config.get('margins', {})
+                        pwr_up = int(margins.get('power_up', 10))
+                        pwr_down = int(margins.get('power_down', 10))
+                        target = Target(target_type, pwr_value + pwr_up, pwr_value - pwr_down)
+                        target.zone_name = zone_name
+                    except:
+                        # Fallback
+                        target = Target(target_type, 250, 200)
+                        target.zone_name = zone_name
+            else:
+                # Valori di default se la zona non è trovata
+                target = Target(target_type, 250, 200)
+                target.zone_name = zone_name
+        
+        # Se non è stato creato un target, crea un target vuoto
+        if target is None:
+            target = Target()
         
         # Crea il passo
         return WorkoutStep(

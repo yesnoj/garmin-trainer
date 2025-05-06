@@ -206,170 +206,6 @@ class StepDialog:
         # Attendi che il dialog sia completato
         self.top.wait_window()
     
-    def get_end_condition(self):
-        """
-        Estrae la condizione di fine dal dettaglio del passo.
-        
-        Returns:
-            str: Condizione di fine
-        """
-        if not self.step_detail:
-            return "lap.button"
-            
-        # Rimuovi eventuali parti dopo " -- " (descrizione)
-        detail = self.step_detail
-        if ' -- ' in detail:
-            detail = detail.split(' -- ')[0]
-        
-        # Rimuovi le parti di target
-        if ' @ ' in detail:
-            detail = detail.split(' @ ')[0]
-        elif ' @spd ' in detail:
-            detail = detail.split(' @spd ')[0]
-        elif ' @hr ' in detail:
-            detail = detail.split(' @hr ')[0]
-        elif ' @pwr ' in detail:
-            detail = detail.split(' @pwr ')[0]
-        
-        # Estrai la condizione di fine
-        detail = detail.strip()
-        
-        if detail == "lap-button":
-            return "lap.button"
-        elif 'min' in detail or ':' in detail:
-            return "time"
-        elif 'km' in detail or 'm' in detail and 'min' not in detail:
-            return "distance"
-        
-        return "lap.button"
-    
-    def get_end_value(self):
-        """
-        Estrae il valore della condizione di fine dal dettaglio del passo.
-        
-        Returns:
-            str: Valore della condizione di fine
-        """
-        if not self.step_detail:
-            return ""
-            
-        # Rimuovi eventuali parti dopo " -- " (descrizione)
-        detail = self.step_detail
-        if ' -- ' in detail:
-            detail = detail.split(' -- ')[0]
-        
-        # Rimuovi le parti di target
-        if ' @ ' in detail:
-            detail = detail.split(' @ ')[0]
-        elif ' @spd ' in detail:
-            detail = detail.split(' @spd ')[0]
-        elif ' @hr ' in detail:
-            detail = detail.split(' @hr ')[0]
-        elif ' @pwr ' in detail:
-            detail = detail.split(' @pwr ')[0]
-        
-        # Estrai il valore
-        detail = detail.strip()
-        
-        # Per distanza
-        if 'km' in detail or 'm' in detail and 'min' not in detail:
-            return detail
-        # Per tempo
-        elif 'min' in detail:
-            return detail
-        elif ':' in detail:
-            return detail
-        
-        return ""
-    
-    def get_target_type(self):
-        """
-        Estrae il tipo di target dal dettaglio del passo.
-        
-        Returns:
-            str: Tipo di target
-        """
-        if not self.step_detail:
-            return "no.target"
-            
-        detail = self.step_detail
-        
-        if ' @ ' in detail:
-            return "pace.zone"
-        elif ' @spd ' in detail:
-            return "speed.zone"
-        elif ' @hr ' in detail:
-            return "heart.rate.zone"
-        elif ' @pwr ' in detail:
-            return "power.zone"
-        
-        return "no.target"
-    
-    def get_target_value(self):
-        """
-        Estrae il valore del target dal dettaglio del passo.
-        
-        Returns:
-            str: Valore del target
-        """
-        if not self.step_detail:
-            return ""
-            
-        detail = self.step_detail
-        
-        if ' @ ' in detail:
-            parts = detail.split(' @ ')
-            if len(parts) >= 2:
-                # Rimuovi la descrizione, se presente
-                target_value = parts[1]
-                if ' -- ' in target_value:
-                    target_value = target_value.split(' -- ')[0]
-                return target_value.strip()
-        
-        elif ' @spd ' in detail:
-            parts = detail.split(' @spd ')
-            if len(parts) >= 2:
-                # Rimuovi la descrizione, se presente
-                target_value = parts[1]
-                if ' -- ' in target_value:
-                    target_value = target_value.split(' -- ')[0]
-                return target_value.strip()
-        
-        elif ' @hr ' in detail:
-            parts = detail.split(' @hr ')
-            if len(parts) >= 2:
-                # Rimuovi la descrizione, se presente
-                target_value = parts[1]
-                if ' -- ' in target_value:
-                    target_value = target_value.split(' -- ')[0]
-                return target_value.strip()
-        
-        elif ' @pwr ' in detail:
-            parts = detail.split(' @pwr ')
-            if len(parts) >= 2:
-                # Rimuovi la descrizione, se presente
-                target_value = parts[1]
-                if ' -- ' in target_value:
-                    target_value = target_value.split(' -- ')[0]
-                return target_value.strip()
-        
-        return ""
-    
-    def get_description(self):
-        """
-        Estrae la descrizione dal dettaglio del passo.
-        
-        Returns:
-            str: Descrizione
-        """
-        if not self.step_detail:
-            return ""
-            
-        if ' -- ' in self.step_detail:
-            return self.step_detail.split(' -- ')[1].strip()
-            
-        return ""
-    
     def get_target_options(self):
         """
         Restituisce le opzioni di target per il tipo di sport corrente.
@@ -387,107 +223,81 @@ class StepDialog:
             options.extend(["pace.zone", "heart.rate.zone"])
         else:
             options.extend(["heart.rate.zone"])
-            
+                
         return options
-    
-    def on_step_type_change(self, event=None):
+
+    def get_description(self):
         """
-        Gestisce il cambio di tipo di passo.
+        Estrae la descrizione dal dettaglio del passo.
         
-        Args:
-            event: Evento di cambio (opzionale)
+        Returns:
+            str: Descrizione
         """
-        step_type = self.step_type_var.get()
-        
-        # Imposta valori di default per ciascun tipo
-        if step_type == "warmup":
-            if not self.end_value_var.get():
-                self.end_condition_var.set("time")
-                self.end_value_var.set("10min")
+        if not self.step_detail:
+            return ""
+                
+        if ' -- ' in self.step_detail:
+            return self.step_detail.split(' -- ')[1].strip()
+                
+        return ""
+
+    def on_save(self):
+        """Salva le modifiche al passo."""
+        try:
+            # Validazione dei dati
+            step_type = self.step_type_var.get()
             
-            # Target di default per il riscaldamento
-            if self.target_var.get() == "no.target" and self.sport_type == "running":
-                self.target_var.set("heart.rate.zone")
-                self.on_target_change()
-        
-        elif step_type == "cooldown":
-            if not self.end_value_var.get():
-                self.end_condition_var.set("time")
-                self.end_value_var.set("5min")
+            # Costruisci il dettaglio del passo
+            detail = ""
             
-            # Target di default per il defaticamento
-            if self.target_var.get() == "no.target" and self.sport_type == "running":
-                self.target_var.set("heart.rate.zone")
-                self.on_target_change()
-        
-        elif step_type == "interval":
-            if not self.end_value_var.get():
-                self.end_condition_var.set("distance")
-                self.end_value_var.set("400m")
+            # Condizione di fine
+            end_condition = self.end_condition_var.get()
+            if end_condition == "lap.button":
+                detail = "lap-button"
+            else:
+                detail = self.end_value_var.get()
             
-            # Target di default per l'intervallo
-            if self.target_var.get() == "no.target":
-                if self.sport_type == "running":
-                    self.target_var.set("pace.zone")
-                elif self.sport_type == "cycling":
-                    self.target_var.set("power.zone")
-                elif self.sport_type == "swimming":
-                    self.target_var.set("pace.zone")
-                self.on_target_change()
-        
-        elif step_type == "recovery":
-            if not self.end_value_var.get():
-                self.end_condition_var.set("time")
-                self.end_value_var.set("1min")
+            # Target
+            target_type = self.target_var.get()
+            if target_type != "no.target":
+                target_value = getattr(self, 'target_value_var', tk.StringVar()).get()
+                
+                if target_type == "pace.zone":
+                    detail += f" @ {target_value}"
+                elif target_type == "heart.rate.zone":
+                    detail += f" @hr {target_value}"
+                elif target_type == "power.zone":
+                    detail += f" @pwr {target_value}"
+                elif target_type == "speed.zone":
+                    detail += f" @spd {target_value}"
+                elif target_type == "cadence.zone":
+                    detail += f" @cad {target_value}"
             
-            # Target di default per il recupero
-            if self.target_var.get() == "no.target" and self.sport_type == "running":
-                self.target_var.set("heart.rate.zone")
-                self.on_target_change()
-        
-        elif step_type == "rest":
-            if not self.end_value_var.get():
-                self.end_condition_var.set("time")
-                self.end_value_var.set("30s")
-        
-        # Aggiorna l'anteprima
-        self.update_preview()
-    
-    def on_end_condition_change(self, event=None):
-        """
-        Gestisce il cambio di condizione di fine.
-        
-        Args:
-            event: Evento di cambio (opzionale)
-        """
-        end_condition = self.end_condition_var.get()
-        
-        if end_condition == "lap.button":
-            self.end_value_label.config(text="Valore:")
-            self.end_value_entry.config(state=tk.DISABLED)
-            self.end_value_var.set("")
-        
-        elif end_condition == "time":
-            self.end_value_label.config(text="Durata:")
-            self.end_value_entry.config(state=tk.NORMAL)
+            # Descrizione
+            description = self.description_var.get().strip()
+            if description:
+                detail += f" -- {description}"
             
-            # Se il valore attuale non è compatibile con il tempo
-            current_value = self.end_value_var.get()
-            if not current_value or "km" in current_value or "m" in current_value and "min" not in current_value:
-                self.end_value_var.set("1min")
-        
-        elif end_condition == "distance":
-            self.end_value_label.config(text="Distanza:")
-            self.end_value_entry.config(state=tk.NORMAL)
+            # Imposta il risultato
+            self.result = (step_type, detail)
             
-            # Se il valore attuale non è compatibile con la distanza
-            current_value = self.end_value_var.get()
-            if not current_value or "min" in current_value or "s" in current_value:
-                self.end_value_var.set("400m")
-        
-        # Aggiorna l'anteprima
-        self.update_preview()
-    
+            # Chiudi il dialog
+            self.top.destroy()
+            
+        except Exception as e:
+            # Mostra errore
+            tk.messagebox.showerror(
+                "Errore", 
+                f"Si è verificato un errore durante il salvataggio: {str(e)}", 
+                parent=self.top
+            )
+
+
+    def on_cancel(self):
+        """Annulla le modifiche e chiude il dialog."""
+        self.result = None
+        self.top.destroy()
+
     def on_target_change(self, event=None):
         """
         Gestisce il cambio di tipo di target.
@@ -609,104 +419,265 @@ class StepDialog:
         
         # Aggiorna l'anteprima
         self.update_preview()
-    
-    def _get_config_paces(self):
+
+    def get_target_type(self):
         """
-        Ottiene i ritmi predefiniti dalla configurazione.
+        Estrae il tipo di target dal dettaglio del passo.
         
         Returns:
-            list: Opzioni di ritmo
+            str: Tipo di target
         """
-        # Accedi alla configurazione attraverso la gerarchia parent
-        try:
-            if hasattr(self.parent, 'controller') and hasattr(self.parent.controller, 'config'):
-                config = self.parent.controller.config
-                if 'workout_config' in config and 'paces' in config['workout_config']:
-                    paces = config['workout_config']['paces']
-                    
-                    # Crea una lista di opzioni nel formato "nome (valore)"
-                    options = []
-                    for name in paces.keys():
-                        options.append(name)
-                    
-                    if not options:
-                        options = ["Z1", "Z2", "Z3", "Z4", "Z5", "recovery", "threshold", "marathon"]
-                        
-                    return options
+        if not self.step_detail:
+            return "no.target"
             
-            # Se non riesce ad accedere alla configurazione, usa valori di default
-            return ["Z1", "Z2", "Z3", "Z4", "Z5", "recovery", "threshold", "marathon"]
-        except:
-            return ["Z1", "Z2", "Z3", "Z4", "Z5", "recovery", "threshold", "marathon"]
-    
-    def _get_config_heart_rates(self):
-        """
-        Ottiene le zone di frequenza cardiaca predefinite dalla configurazione.
+        detail = self.step_detail
         
-        Returns:
-            list: Opzioni di zona di frequenza cardiaca
+        if ' @ ' in detail:
+            return "pace.zone"
+        elif ' @spd ' in detail:
+            return "speed.zone"
+        elif ' @hr ' in detail:
+            return "heart.rate.zone"
+        elif ' @pwr ' in detail:
+            return "power.zone"
+        elif ' @cad ' in detail:
+            return "cadence.zone"
+        
+        return "no.target"
+
+    def on_step_type_change(self, event=None):
         """
-        # Accedi alla configurazione attraverso la gerarchia parent
-        try:
-            if hasattr(self.parent, 'controller') and hasattr(self.parent.controller, 'config'):
-                config = self.parent.controller.config
-                if 'workout_config' in config and 'heart_rates' in config['workout_config']:
-                    heart_rates = config['workout_config']['heart_rates']
-                    
-                    # Filtra per escludere max_hr
-                    options = []
-                    for name in heart_rates.keys():
-                        if name != 'max_hr':
-                            options.append(name)
-                    
-                    if not options:
-                        options = ["Z1_HR", "Z2_HR", "Z3_HR", "Z4_HR", "Z5_HR"]
-                        
-                    return options
+        Gestisce il cambio di tipo di passo.
+        
+        Args:
+            event: Evento di cambio (opzionale)
+        """
+        step_type = self.step_type_var.get()
+        
+        # Imposta valori di default per ciascun tipo
+        if step_type == "warmup":
+            if not self.end_value_var.get():
+                self.end_condition_var.set("time")
+                self.end_value_var.set("10min")
             
-            # Se non riesce ad accedere alla configurazione, usa valori di default
-            return ["Z1_HR", "Z2_HR", "Z3_HR", "Z4_HR", "Z5_HR"]
-        except:
-            return ["Z1_HR", "Z2_HR", "Z3_HR", "Z4_HR", "Z5_HR"]
-    
-    def _load_latest_zone_values(self):
-        """Carica i valori più recenti delle zone dalla configurazione."""
-        if hasattr(self.parent, 'controller') and hasattr(self.parent.controller, 'config'):
-            config = self.parent.controller.config
-            if 'workout_config' in config:
-                # Aggiorna i target dalle zone disponibili
+            # Target di default per il riscaldamento
+            if self.target_var.get() == "no.target" and self.sport_type == "running":
+                self.target_var.set("heart.rate.zone")
                 self.on_target_change()
-    
-    def _get_config_power_zones(self):
+        
+        elif step_type == "cooldown":
+            if not self.end_value_var.get():
+                self.end_condition_var.set("time")
+                self.end_value_var.set("5min")
+            
+            # Target di default per il defaticamento
+            if self.target_var.get() == "no.target" and self.sport_type == "running":
+                self.target_var.set("heart.rate.zone")
+                self.on_target_change()
+        
+        elif step_type == "interval":
+            if not self.end_value_var.get():
+                self.end_condition_var.set("distance")
+                self.end_value_var.set("400m")
+            
+            # Target di default per l'intervallo
+            if self.target_var.get() == "no.target":
+                if self.sport_type == "running":
+                    self.target_var.set("pace.zone")
+                elif self.sport_type == "cycling":
+                    self.target_var.set("power.zone")
+                elif self.sport_type == "swimming":
+                    self.target_var.set("pace.zone")
+                self.on_target_change()
+        
+        elif step_type == "recovery":
+            if not self.end_value_var.get():
+                self.end_condition_var.set("time")
+                self.end_value_var.set("1min")
+            
+            # Target di default per il recupero
+            if self.target_var.get() == "no.target" and self.sport_type == "running":
+                self.target_var.set("heart.rate.zone")
+                self.on_target_change()
+        
+        elif step_type == "rest":
+            if not self.end_value_var.get():
+                self.end_condition_var.set("time")
+                self.end_value_var.set("30s")
+        
+        # Aggiorna l'anteprima
+        self.update_preview()
+
+    def on_end_condition_change(self, event=None):
         """
-        Ottiene le zone di potenza predefinite dalla configurazione.
+        Gestisce il cambio di condizione di fine.
+        
+        Args:
+            event: Evento di cambio (opzionale)
+        """
+        end_condition = self.end_condition_var.get()
+        
+        if end_condition == "lap.button":
+            self.end_value_label.config(text="Valore:")
+            self.end_value_entry.config(state=tk.DISABLED)
+            self.end_value_var.set("")
+        
+        elif end_condition == "time":
+            self.end_value_label.config(text="Durata:")
+            self.end_value_entry.config(state=tk.NORMAL)
+            
+            # Se il valore attuale non è compatibile con il tempo
+            current_value = self.end_value_var.get()
+            if not current_value or "km" in current_value or "m" in current_value and "min" not in current_value:
+                self.end_value_var.set("1min")
+        
+        elif end_condition == "distance":
+            self.end_value_label.config(text="Distanza:")
+            self.end_value_entry.config(state=tk.NORMAL)
+            
+            # Se il valore attuale non è compatibile con la distanza
+            current_value = self.end_value_var.get()
+            if not current_value or "min" in current_value or "s" in current_value:
+                self.end_value_var.set("400m")
+        
+        # Aggiorna l'anteprima
+        self.update_preview()
+
+    def get_end_condition(self):
+        """
+        Estrae la condizione di fine dal dettaglio del passo.
         
         Returns:
-            list: Opzioni di zona di potenza
+            str: Condizione di fine
         """
-        # Accedi alla configurazione attraverso la gerarchia parent
-        try:
-            if hasattr(self.parent, 'controller') and hasattr(self.parent.controller, 'config'):
-                config = self.parent.controller.config
-                if 'workout_config' in config and 'power_values' in config['workout_config']:
-                    power_values = config['workout_config']['power_values']
-                    
-                    # Filtra per escludere ftp
-                    options = []
-                    for name in power_values.keys():
-                        if name != 'ftp':
-                            options.append(name)
-                    
-                    if not options:
-                        options = ["Z1", "Z2", "Z3", "Z4", "Z5", "threshold", "sweet_spot"]
-                        
-                    return options
+        if not self.step_detail:
+            return "lap.button"
             
-            # Se non riesce ad accedere alla configurazione, usa valori di default
-            return ["Z1", "Z2", "Z3", "Z4", "Z5", "threshold", "sweet_spot"]
-        except:
-            return ["Z1", "Z2", "Z3", "Z4", "Z5", "threshold", "sweet_spot"]
+        # Rimuovi eventuali parti dopo " -- " (descrizione)
+        detail = self.step_detail
+        if ' -- ' in detail:
+            detail = detail.split(' -- ')[0]
+        
+        # Rimuovi le parti di target
+        if ' @ ' in detail:
+            detail = detail.split(' @ ')[0]
+        elif ' @spd ' in detail:
+            detail = detail.split(' @spd ')[0]
+        elif ' @hr ' in detail:
+            detail = detail.split(' @hr ')[0]
+        elif ' @pwr ' in detail:
+            detail = detail.split(' @pwr ')[0]
+        
+        # Estrai la condizione di fine
+        detail = detail.strip()
+        
+        if detail == "lap-button":
+            return "lap.button"
+        elif 'min' in detail or ':' in detail:
+            return "time"
+        elif 'km' in detail or 'm' in detail and 'min' not in detail:
+            return "distance"
+        
+        return "lap.button"
     
+    def get_end_value(self):
+        """
+        Estrae il valore della condizione di fine dal dettaglio del passo.
+        
+        Returns:
+            str: Valore della condizione di fine
+        """
+        if not self.step_detail:
+            return ""
+            
+        # Rimuovi eventuali parti dopo " -- " (descrizione)
+        detail = self.step_detail
+        if ' -- ' in detail:
+            detail = detail.split(' -- ')[0]
+        
+        # Rimuovi le parti di target
+        if ' @ ' in detail:
+            detail = detail.split(' @ ')[0]
+        elif ' @spd ' in detail:
+            detail = detail.split(' @spd ')[0]
+        elif ' @hr ' in detail:
+            detail = detail.split(' @hr ')[0]
+        elif ' @pwr ' in detail:
+            detail = detail.split(' @pwr ')[0]
+        
+        # Estrai il valore
+        detail = detail.strip()
+        
+        # Per distanza
+        if 'km' in detail or 'm' in detail and 'min' not in detail:
+            return detail
+        # Per tempo
+        elif 'min' in detail:
+            return detail
+        elif ':' in detail:
+            return detail
+        
+        return ""
+        
+    def get_target_value(self):
+        """
+        Estrae il valore del target dal dettaglio del passo.
+        
+        Returns:
+            str: Valore del target
+        """
+        if not self.step_detail:
+            return ""
+            
+        detail = self.step_detail
+        
+        if ' @ ' in detail:
+            parts = detail.split(' @ ')
+            if len(parts) >= 2:
+                # Rimuovi la descrizione, se presente
+                target_value = parts[1]
+                if ' -- ' in target_value:
+                    target_value = target_value.split(' -- ')[0]
+                return target_value.strip()
+        
+        elif ' @spd ' in detail:
+            parts = detail.split(' @spd ')
+            if len(parts) >= 2:
+                # Rimuovi la descrizione, se presente
+                target_value = parts[1]
+                if ' -- ' in target_value:
+                    target_value = target_value.split(' -- ')[0]
+                return target_value.strip()
+        
+        elif ' @hr ' in detail:
+            parts = detail.split(' @hr ')
+            if len(parts) >= 2:
+                # Rimuovi la descrizione, se presente
+                target_value = parts[1]
+                if ' -- ' in target_value:
+                    target_value = target_value.split(' -- ')[0]
+                return target_value.strip()
+        
+        elif ' @pwr ' in detail:
+            parts = detail.split(' @pwr ')
+            if len(parts) >= 2:
+                # Rimuovi la descrizione, se presente
+                target_value = parts[1]
+                if ' -- ' in target_value:
+                    target_value = target_value.split(' -- ')[0]
+                return target_value.strip()
+        
+        elif ' @cad ' in detail:
+            parts = detail.split(' @cad ')
+            if len(parts) >= 2:
+                # Rimuovi la descrizione, se presente
+                target_value = parts[1]
+                if ' -- ' in target_value:
+                    target_value = target_value.split(' -- ')[0]
+                return target_value.strip()
+        
+        return ""
+        
     def update_preview(self):
         """Aggiorna l'anteprima del passo."""
         try:
@@ -747,58 +718,91 @@ class StepDialog:
         except Exception as e:
             self.preview_var.set(f"Errore nell'anteprima: {str(e)}")
     
-    def on_save(self):
-        """Salva le modifiche al passo."""
+    def _get_config_paces(self):
+        """
+        Ottiene i ritmi predefiniti dalla configurazione.
+        
+        Returns:
+            list: Opzioni di ritmo
+        """
+        # Accedi alla configurazione attraverso la gerarchia parent
         try:
-            # Validazione dei dati
-            step_type = self.step_type_var.get()
+            if hasattr(self.parent, 'controller') and hasattr(self.parent.controller, 'config'):
+                config = self.parent.controller.config
+                if 'workout_config' in config and 'paces' in config['workout_config']:
+                    paces = config['workout_config']['paces']
+                    
+                    # Crea una lista di opzioni nel formato "nome (valore)"
+                    options = []
+                    for name in paces.keys():
+                        options.append(name)
+                    
+                    if not options:
+                        options = ["Z1", "Z2", "Z3", "Z4", "Z5", "recovery", "threshold", "marathon"]
+                        
+                    return options
             
-            # Costruisci il dettaglio del passo
-            detail = ""
+            # Se non riesce ad accedere alla configurazione, usa valori di default
+            return ["Z1", "Z2", "Z3", "Z4", "Z5", "recovery", "threshold", "marathon"]
+        except:
+            return ["Z1", "Z2", "Z3", "Z4", "Z5", "recovery", "threshold", "marathon"]
+
+    def _get_config_heart_rates(self):
+        """
+        Ottiene le zone di frequenza cardiaca predefinite dalla configurazione.
+        
+        Returns:
+            list: Opzioni di zona di frequenza cardiaca
+        """
+        # Accedi alla configurazione attraverso la gerarchia parent
+        try:
+            if hasattr(self.parent, 'controller') and hasattr(self.parent.controller, 'config'):
+                config = self.parent.controller.config
+                if 'workout_config' in config and 'heart_rates' in config['workout_config']:
+                    heart_rates = config['workout_config']['heart_rates']
+                    
+                    # Filtra per escludere max_hr
+                    options = []
+                    for name in heart_rates.keys():
+                        if name != 'max_hr':
+                            options.append(name)
+                    
+                    if not options:
+                        options = ["Z1_HR", "Z2_HR", "Z3_HR", "Z4_HR", "Z5_HR"]
+                        
+                    return options
             
-            # Condizione di fine
-            end_condition = self.end_condition_var.get()
-            if end_condition == "lap.button":
-                detail = "lap-button"
-            else:
-                detail = self.end_value_var.get()
+            # Se non riesce ad accedere alla configurazione, usa valori di default
+            return ["Z1_HR", "Z2_HR", "Z3_HR", "Z4_HR", "Z5_HR"]
+        except:
+            return ["Z1_HR", "Z2_HR", "Z3_HR", "Z4_HR", "Z5_HR"]
+
+    def _get_config_power_zones(self):
+        """
+        Ottiene le zone di potenza predefinite dalla configurazione.
+        
+        Returns:
+            list: Opzioni di zona di potenza
+        """
+        # Accedi alla configurazione attraverso la gerarchia parent
+        try:
+            if hasattr(self.parent, 'controller') and hasattr(self.parent.controller, 'config'):
+                config = self.parent.controller.config
+                if 'workout_config' in config and 'power_values' in config['workout_config']:
+                    power_values = config['workout_config']['power_values']
+                    
+                    # Filtra per escludere ftp
+                    options = []
+                    for name in power_values.keys():
+                        if name != 'ftp':
+                            options.append(name)
+                    
+                    if not options:
+                        options = ["Z1", "Z2", "Z3", "Z4", "Z5", "threshold", "sweet_spot"]
+                        
+                    return options
             
-            # Target
-            target_type = self.target_var.get()
-            if target_type != "no.target":
-                target_value = getattr(self, 'target_value_var', tk.StringVar()).get()
-                
-                if target_type == "pace.zone":
-                    detail += f" @ {target_value}"
-                elif target_type == "heart.rate.zone":
-                    detail += f" @hr {target_value}"
-                elif target_type == "power.zone":
-                    detail += f" @pwr {target_value}"
-                elif target_type == "speed.zone":
-                    detail += f" @spd {target_value}"
-                elif target_type == "cadence.zone":
-                    detail += f" @cad {target_value}"
-            
-            # Descrizione
-            description = self.description_var.get().strip()
-            if description:
-                detail += f" -- {description}"
-            
-            # Imposta il risultato
-            self.result = (step_type, detail)
-            
-            # Chiudi il dialog
-            self.top.destroy()
-            
-        except Exception as e:
-            # Mostra errore
-            tk.messagebox.showerror(
-                "Errore", 
-                f"Si è verificato un errore durante il salvataggio: {str(e)}", 
-                parent=self.top
-            )
-    
-    def on_cancel(self):
-        """Annulla le modifiche e chiude il dialog."""
-        self.result = None
-        self.top.destroy()
+            # Se non riesce ad accedere alla configurazione, usa valori di default
+            return ["Z1", "Z2", "Z3", "Z4", "Z5", "threshold", "sweet_spot"]
+        except:
+            return ["Z1", "Z2", "Z3", "Z4", "Z5", "threshold", "sweet_spot"]

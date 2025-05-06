@@ -437,6 +437,7 @@ class Target:
         self.to_value = to_value
         self.from_value = from_value
         self.zone = zone
+        self.zone_name = None
 
     def garminconnect_json(self):
         """
